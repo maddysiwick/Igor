@@ -24,7 +24,7 @@ class MCTS:
         self._expand(leaf)
         reward=self._simulate(leaf)
         self._backpropagate(path,reward)
-    def select(self,node):
+    def _select(self,node):
         path=[]
         while True:
             path.append(node)
@@ -50,4 +50,31 @@ class MCTS:
             invert_reward=not invert_reward
     def _backpropagate(self,path,reward):
         for node in reversed(path):
-            
+            self.N[node]+=1
+            self.Q[node]+=reward
+            reward=1-reward
+    def _uct_select(self,node):
+        assert all(n in self.children for n in self.children[node])
+        log_N_vertex=math.log(self.N[node])
+        def uct(n):
+            return self.Q[n]/self.N[n]+self.exploration_weight*math.sqrt(log_N_vertex/self.N[n])
+        return max(self.children[node],key=uct)
+class Node(ABC):
+    @abstractmethod
+    def find_children(self):
+        return set()
+    @abstractmethod
+    def find_random_child(self):
+        return None
+    @abstractmethod
+    def is_terminal(self):
+        return True
+    @abstractmethod
+    def reward(self):
+        return 0
+    @abstractmethod
+    def __hash__(self):
+        return 123456789
+    @abstractmethod
+    def __eq__(self, value):
+        return True
