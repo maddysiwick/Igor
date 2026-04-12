@@ -65,7 +65,7 @@ class CheckersBoard(_CB,Node):
             return 0
         raise RuntimeError(f'board has unknown advantage type {board.advantage()}')'''
 
-        return (12-board.tup.count(True))-(12-board.tup.count(False))
+        return (12-board.tup.count(True))-(12-board.tup.count(True))
 
     def is_terminal(board):
         return board.terminal
