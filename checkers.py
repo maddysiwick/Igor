@@ -7,15 +7,20 @@ from random import choice
 _CB=namedtuple('CheckersBoard','tup prev turn move winner terminal advantage kings round')
 
 class CheckersBoard(_CB,Node):
-    def find_legal_moves(board,s,moves):
+    def find_legal_moves(board,moves,king_moves,jumping):
         legal_moves=[]
-        for i in moves:
-            if 63>=s+i>=0 and check_dark_square(s+i):
-                if board.tup[s+i]==None:
-                    legal_moves.append((s,s+i,False,500))
-            if 63>=s+i*2>=0 and check_dark_square(s+i*2):
-                if board.tup[s+i]==(not board.turn) and board.tup[s+2*i]==None:
-                    legal_moves.append((s,s+2*i,True,s+i))
+        for s in range(len(board.tup)):
+            if board.tup[s]==board.turn:
+                if s in board.kings:
+                    for i in king_moves:
+                        if 63>=s+i>=0 and check_dark_square(s+i):
+                            if (jumping==False or board.tup[int(s+i/2)]==(not board.turn)) and board.tup[s+i]==None:
+                                legal_moves.append((s,s+i,jumping,s+i/2))
+                else:
+                    for i in moves:
+                        if 63>=s+i>=0 and check_dark_square(s+i):
+                            if (jumping==False or board.tup[int(s+i/2)]==(not board.turn)) and board.tup[s+i]==None:
+                                legal_moves.append((s,s+i,jumping,s+i/2))
         
         return legal_moves
     def find_dirs(board):
@@ -25,27 +30,16 @@ class CheckersBoard(_CB,Node):
     def find_children(board):
         if board.terminal:
             return set()
-        legal_moves=[]
-        moves=board.find_dirs()
-        for s,square in enumerate(board.tup):
-            if square is not None and square==board.turn:
-                if s in board.kings:
-                    print('clicked on a king!')
-                    legal_moves+=board.find_legal_moves(s,(9,7,-9,-7))
-                else:
-                    legal_moves+=board.find_legal_moves(s,moves)
+        legal_moves=board.find_legal_moves((14,18),(14,18,-14,-18),True)
+        if legal_moves==[]:
+            legal_moves=board.find_legal_moves((7,9),(7,9,-7,-9),False)
         return {board.make_move(i) for i in legal_moves}
     def find_random_child(board):
         if board.terminal:
             return None
-        legal_moves=[]
-        moves=board.find_dirs()
-        for s,square in enumerate(board.tup):
-            if square is not None and square==board.turn:
-                if s in board.kings:
-                    legal_moves+=board.find_legal_moves(s,(9,7,-9,-7))
-                else:
-                    legal_moves+=board.find_legal_moves(s,moves)
+        legal_moves=board.find_legal_moves((14,18),(14,18,-14,-18),True)
+        if legal_moves==[]:
+            legal_moves=board.find_legal_moves((7,9),(7,9,-7,-9),False)
         if legal_moves==[]:
             return board
         return board.make_move(choice(legal_moves))
@@ -94,13 +88,13 @@ class CheckersBoard(_CB,Node):
             kings[kings.index(move[0])]=move[1]
         if move[3] in kings:
             kings.remove(move[3])
-        for i,val in enumerate(board.tup[:8]):
-            if val==True and i not in kings:
+        for i in range(8):
+            if tup[i] == True and i not in kings:
                 print('found a star king')
                 kings.append(i)
         round=board.round+1
-        for i,val in enumerate(board.tup[56:]):
-            if val==False and i not in kings:
+        for i in range(56, 64):
+            if tup[i] == False and i not in kings: 
                 print('found a moon king')
                 kings.append(i)
         kings=tuple(kings)
@@ -119,9 +113,7 @@ class my_piece:
     def on_hover(self,pos):
             return self.rect.collidepoint(pos)
     def on_click(self,board):
-            moves=board.find_dirs()
-            s=self.square
-            return board.find_legal_moves(s,moves)
+            return None
 class empty_square:
     def __init__(self,position,square):
         self.rect=pygame.Rect(position,(87,87))
@@ -176,18 +168,24 @@ def play_game():
         while board.turn==True:
             for event in pygame.event.get():
                 if event.type==pygame.MOUSEBUTTONDOWN:
+                    legal_moves=board.find_legal_moves((-14,-18),(-14,-18,14,18),True)
+                    if legal_moves==[]:
+                        legal_moves=board.find_legal_moves((-7,-9),(-7,-9,7,9),False)
+                    print(legal_moves)
                     for piece in my_pieces:
                         if piece.on_hover(event.pos):
-                            moves=piece.on_click(board)
-                            if moves!=[]:
-                                legal_moves=moves
-                            #for move in legal_moves:
-                                #print(move)
+                            start=piece.square
                     for square in empty_squares:
                         if square.on_hover(event.pos):
-                            legal=square.on_click(legal_moves)
-                            if legal[0]:
-                                board=board.make_move(legal[1])
+                            end=square.square
+                            eat=start+(end-start)/2
+                            if -9>end-start>9:
+                                move=(start,end,True,eat)
+                            else:
+                                move=(start,end,False,eat)
+                            print(move)
+                            if move in legal_moves:
+                                board=board.make_move(move)   
                                 clickables=load_board(board,screen,moon,star,king,imp)
                                 my_pieces=clickables[0]
                                 empty_squares=clickables[1]
