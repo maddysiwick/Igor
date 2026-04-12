@@ -43,11 +43,11 @@ class MCTS:
     def _simulate(self,node):
         invert_reward=True
         while True:
-            if node.round==20:
+            if node.is_terminal():
                 reward=node.reward()
                 return 1 - reward if invert_reward else reward
             node=node.find_random_child()
-            invert_reward=not invert_reward #hey so what the fuck is this doing
+            invert_reward=not invert_reward
     def _backpropagate(self,path,reward):
         for node in reversed(path):
             self.N[node]+=1
