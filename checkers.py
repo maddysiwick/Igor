@@ -16,7 +16,6 @@ class CheckersBoard(_CB,Node):
             if 63>=s+i*2>=0 and check_dark_square(s+i*2):
                 if board.tup[s+i]==(not board.turn) and board.tup[s+2*i]==None:
                     legal_moves.append((s,s+2*i,True,s+i))
-        
         return legal_moves
     def find_dirs(board):
         if board.turn:
@@ -30,7 +29,6 @@ class CheckersBoard(_CB,Node):
         for s,square in enumerate(board.tup):
             if square is not None and square==board.turn:
                 if s in board.kings:
-                    print('clicked on a king!')
                     legal_moves+=board.find_legal_moves(s,(9,7,-9,-7))
                 else:
                     legal_moves+=board.find_legal_moves(s,moves)
@@ -47,7 +45,7 @@ class CheckersBoard(_CB,Node):
                 else:
                     legal_moves+=board.find_legal_moves(s,moves)
         if legal_moves==[]:
-            return board
+            return board.set_terminal()
         return board.make_move(choice(legal_moves))
     def reward(board):
         '''if not board.terminal:
@@ -71,8 +69,10 @@ class CheckersBoard(_CB,Node):
 
     def is_terminal(board):
         return board.terminal
+    def set_terminal(board):
+        board.terminal=True
+        return board
     def make_move(board,move):
-        #print(move)
         if move[2]==True:
             if move[0]<move[1]:
                 tup=board.tup[:move[0]]+(None,)+board.tup[move[0]+1:move[3]]+(None,)+board.tup[move[3]+1:move[1]]+(board.turn,)+board.tup[move[1]+1:]
@@ -197,7 +197,7 @@ def play_game():
             else:
                 print('moons won :(')
             break
-        for _ in range(60):
+        for _ in range(12):
             print(_)
             tree.do_rollout(board)
         board=tree.choose(board)
