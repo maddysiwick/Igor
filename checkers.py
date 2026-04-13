@@ -45,27 +45,17 @@ class CheckersBoard(_CB,Node):
                 else:
                     legal_moves+=board.find_legal_moves(s,moves)
         if legal_moves==[]:
+            board.winner=True
             return board.set_terminal()
         return board.make_move(choice(legal_moves))
     def reward(board):
-        '''if not board.terminal:
-            raise RuntimeError(f'reward called on non terminal node {board}')
-        if board.winner is board.turn:
-            raise RuntimeError(f'reward called on unreachable node {board}')
-        if board.turn is (not board.winner):
-            return 0
-        if board.winner is None:
-            return 0.5
-        '''
-        '''if board.advantage==True:
-            return 0
-        elif board.advantage==False:
-            return 1
-        elif board.advantage==None:
-            return 0
-        raise RuntimeError(f'board has unknown advantage type {board.advantage()}')'''
-
-        return (12-board.tup.count(True))-(12-board.tup.count(True))
+        if board.terminal:
+            if board.winner:
+                return -12
+            else:
+                return 12
+        else:
+            return (12-board.tup.count(True))-(12-board.tup.count(True))
 
     def is_terminal(board):
         return board.terminal
