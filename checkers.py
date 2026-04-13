@@ -191,7 +191,7 @@ def play_game():
             else:
                 print('moons won :(')
             break
-        for _ in range(12):
+        for _ in range(60):
             print(_)
             tree.do_rollout(board)
         board=tree.choose(board)
