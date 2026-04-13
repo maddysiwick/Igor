@@ -100,9 +100,9 @@ class CheckersBoard(_CB,Node):
                 kings.append(i)
         round=board.round+1
         for i,val in enumerate(board.tup[56:]):
-            if val==False and i not in kings:
+            if val==False and i+56 not in kings:
                 print('found a moon king')
-                kings.append(i)
+                kings.append(i+56)
         kings=tuple(kings)
         return CheckersBoard(tup,prev,turn,move,winner,is_terminal,advant,kings,round)
 def advantage(tup,prev):
@@ -119,8 +119,11 @@ class my_piece:
     def on_hover(self,pos):
             return self.rect.collidepoint(pos)
     def on_click(self,board):
-            moves=board.find_dirs()
             s=self.square
+            if(s in board.kings):
+                moves=(-9,-7,9,7)
+            else:
+                moves=board.find_dirs()
             return board.find_legal_moves(s,moves)
 class empty_square:
     def __init__(self,position,square):
@@ -133,7 +136,7 @@ class empty_square:
             if self.square==move[1]:
                 return (True,move)
         return (False,)
-def load_board(board,screen,moon,star,king,imp):
+def load_board(board,screen,moon,star,star_king,moon_king,imp):
     print('kings',board.kings)
     positionss=positions()
     clean=Color(0,0,0,0)
@@ -145,12 +148,12 @@ def load_board(board,screen,moon,star,king,imp):
             value=board.tup[i]
             if value==False:
                 if i in board.kings:
-                    screen.blit(king,pos)
+                    screen.blit(moon_king,pos)
                 else:
                     screen.blit(moon,pos)
             elif value==True:
                 if i in board.kings:
-                    piece=my_piece(king,pos,i)
+                    piece=my_piece(star_king,pos,i)
                 else:
                     piece=my_piece(star,pos,i)
                 screen.blit(piece.image,piece.rect)
@@ -167,8 +170,9 @@ def play_game():
     imp=pygame.image.load('assets\Checkerboard_.png').convert_alpha()
     moon=pygame.image.load('assets\Moon_Basic.png').convert_alpha()
     star=pygame.image.load('assets\star.png').convert_alpha()
-    king=pygame.image.load('assets\king.jpg').convert_alpha()
-    clickables=load_board(board,screen,moon,star,king,imp)
+    star_king=pygame.image.load('assets\star-king.jpg').convert_alpha()
+    moon_king=pygame.image.load('assets\moon-king.jpg').convert_alpha()
+    clickables=load_board(board,screen,moon,star,star_king,moon_king,imp)
     my_pieces=clickables[0]
     empty_squares=clickables[1]
     legal_moves=[]
@@ -188,7 +192,7 @@ def play_game():
                             legal=square.on_click(legal_moves)
                             if legal[0]:
                                 board=board.make_move(legal[1])
-                                clickables=load_board(board,screen,moon,star,king,imp)
+                                clickables=load_board(board,screen,moon,star,star_king,moon_king,imp)
                                 my_pieces=clickables[0]
                                 empty_squares=clickables[1]
         if board.terminal:
@@ -201,7 +205,7 @@ def play_game():
             print(_)
             tree.do_rollout(board)
         board=tree.choose(board)
-        clickables=load_board(board,screen,moon,star,king,imp)
+        clickables=load_board(board,screen,moon,star,star_king,moon_king,imp)
         my_pieces=clickables[0]
         empty_squares=clickables[1]
         if board.terminal:
